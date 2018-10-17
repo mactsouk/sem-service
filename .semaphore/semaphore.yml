@@ -1,0 +1,40 @@
+version: v1.0
+name: Testing sem-service
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Databases
+    task:
+      env_vars:
+        - name: APP_ENV
+          value: prod
+      jobs:
+      - name: MySQL
+        commands:
+          - sem-service start mysql
+          - sudo apt-get install -y -qq mysql-client
+          - mysql --host=0.0.0.0 -uroot -e "create database fooo"
+          - mysql --host=0.0.0.0 -uroot -e "show databases" | grep fooo
+          - sem-service status mysql
+
+      - name: PostgreSQL
+        commands:
+          - sem-service start postgres
+          - sudo apt-get install -y -qq postgresql-client
+          - createdb -U postgres -h 0.0.0.0 fooo
+          - psql -h 0.0.0.0 -U postgres -c "\l" | grep fooo
+          - sem-service status postgres
+
+      - name: Redis
+        commands:
+          - sem-service start redis
+          - sem-service status redis
+
+      - name: Memcached
+        commands:
+          - sem-service start memcached
+          - sem-service status memcached
+
